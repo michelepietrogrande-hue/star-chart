@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Star Chart 🌟</title>
+    <title>Tabella Stelle - Lavinia & Ludovica 🌟</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #6c5ce7; /* Un viola moderno per la versione "International" */
+            --primary-color: #6c5ce7;
+            --lavinia-color: #ff7675;
+            --ludo-color: #74b9ff;
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --star-empty: #d1ccc0;
-            --star-filled: #fdcb6e;
+            --dot-empty: #d1ccc0;
+            --dot-filled: #fdcb6e;
             --text-color: #2d3436;
             --main-font: 'Fredoka', sans-serif;
         }
@@ -26,7 +28,7 @@
         }
 
         .container {
-            width: 100%; max-width: 1000px;
+            width: 100%; max-width: 1100px;
             background: var(--card-bg);
             padding: 20px; border-radius: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
@@ -35,69 +37,146 @@
         header {
             text-align: center; margin-bottom: 20px;
             border-bottom: 3px dashed var(--primary-color);
-            padding-bottom: 15px;
+            padding-bottom: 20px;
         }
 
-        #childName {
-            font-family: var(--main-font); font-size: 2rem;
-            border: none; background: transparent;
-            text-align: center; color: var(--primary-color);
-            font-weight: 600; width: 100%;
+        /* Stile Tachimetri */
+        .score-board {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-top: 20px;
         }
 
-        .stats-container {
-            display: flex; justify-content: center; align-items: center;
-            gap: 15px; margin-top: 10px;
+        .gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
         }
 
-        .stats { font-size: 1.8rem; font-weight: 600; }
-        .medal-icon { font-size: 2.8rem; }
-
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background-color: var(--primary-color); color: white; padding: 15px; }
-        td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
-
-        .task-column { 
-            text-align: left; font-weight: 600; 
-            width: 260px; color: #4a4a4a; font-size: 1rem;
+        .gauge {
+            position: relative;
+            width: 120px;
+            height: 120px;
         }
 
-        .stars-container { display: flex; justify-content: center; gap: 4px; }
-        .star { font-size: 26px; color: var(--star-empty); cursor: pointer; transition: 0.2s; user-select: none; }
-        .star.active { color: var(--star-filled); transform: scale(1.2); }
+        .gauge svg {
+            width: 120px;
+            height: 120px;
+            transform: rotate(-90deg);
+        }
+
+        .gauge circle {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+        }
+
+        .gauge .bg { stroke: #eee; }
+        
+        .gauge .progress {
+            stroke-dasharray: 345.5; /* Circosferenza 2 * PI * 55 */
+            stroke-dashoffset: 345.5;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .points-num { font-size: 1.8rem; font-weight: 600; display: block; line-height: 1; }
+        .medal-mini { font-size: 1.2rem; }
+
+        .child-label { font-size: 1.2rem; font-weight: 600; margin-top: 10px; }
+
+        /* Tabella */
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background-color: var(--primary-color); color: white; padding: 12px; font-size: 0.9rem; border-radius: 5px; }
+        td { padding: 8px 5px; border-bottom: 1px solid #eee; text-align: center; }
+
+        .category-title { 
+            text-align: left; font-weight: 600; color: #4a4a4a; 
+            font-size: 1rem; padding: 15px 10px 5px 10px; background: #fcfcfc;
+        }
+
+        .child-row-label {
+            text-align: left; font-size: 0.9rem; padding-left: 30px;
+            font-weight: 600; width: 220px;
+        }
+
+        .dots-container { display: flex; justify-content: center; gap: 8px; }
+        .dot { 
+            font-size: 24px; color: var(--dot-empty); cursor: pointer; 
+            transition: 0.2s; user-select: none;
+        }
+        .dot.active { color: var(--dot-filled); transform: scale(1.15); }
 
         .btn-reset { 
-            margin-top: 25px; padding: 12px 25px; 
+            margin-top: 30px; padding: 12px 25px; 
             border: none; border-radius: 50px; 
-            background-color: #dfe6e9; color: #636e72; 
-            cursor: pointer; font-family: var(--main-font); font-weight: 600;
+            background-color: #dfe6e9; color: #636e72; cursor: pointer;
+            font-family: var(--main-font); font-weight: 600;
         }
 
         #celebration {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 4rem; pointer-events: none; display: none; z-index: 1000;
+            font-size: 4rem; display: none; z-index: 1000;
             animation: popIn 1s ease-out forwards; color: var(--primary-color);
+            font-weight: 600; pointer-events: none;
         }
 
         @keyframes popIn { 0% { scale: 0; } 50% { scale: 1.2; } 100% { scale: 1; opacity: 0; } }
 
         @media (max-width: 600px) {
-            .task-column { font-size: 0.8rem; width: 130px; }
-            th { font-size: 0.75rem; }
+            .child-row-label { width: 110px; padding-left: 10px; }
+            .gauge { width: 90px; height: 90px; }
+            .gauge svg { width: 90px; height: 90px; }
+            .score-board { gap: 15px; }
         }
     </style>
 </head>
 <body>
 
-<div id="celebration">WELL DONE! 🌟</div>
+<div id="celebration">BRAVISSIMA! 🌟</div>
 
 <div class="container">
     <header>
-        <input type="text" id="childName" value="Super Star Chart">
-        <div class="stats-container">
-            <div class="stats"><span id="totalPoints">0</span> ⭐</div>
-            <div id="medalIcon" class="medal-icon">⚪</div>
+        <h1 style="margin:0; color: var(--primary-color)">Super Star Chart</h1>
+        
+        <div class="score-board">
+            <div class="gauge-container">
+                <div class="gauge">
+                    <svg>
+                        <circle class="bg" cx="60" cy="60" r="55"></circle>
+                        <circle id="progress-0" class="progress" cx="60" cy="60" r="55" style="stroke: var(--lavinia-color);"></circle>
+                    </svg>
+                    <div class="gauge-text">
+                        <span id="points-0" class="points-num">0</span>
+                        <span id="medal-0" class="medal-mini">⚪</span>
+                    </div>
+                </div>
+                <span class="child-label lavinia-text">Lavinia</span>
+            </div>
+
+            <div class="gauge-container">
+                <div class="gauge">
+                    <svg>
+                        <circle class="bg" cx="60" cy="60" r="55"></circle>
+                        <circle id="progress-1" class="progress" cx="60" cy="60" r="55" style="stroke: var(--ludo-color);"></circle>
+                    </svg>
+                    <div class="gauge-text">
+                        <span id="points-1" class="points-num">0</span>
+                        <span id="medal-1" class="medal-mini">⚪</span>
+                    </div>
+                </div>
+                <span class="child-label ludo-text">Ludovica</span>
+            </div>
         </div>
     </header>
 
@@ -105,8 +184,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>Activities</th>
-                    <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+                    <th>Attività</th>
+                    <th>Lun</th><th>Mar</th><th>Mer</th><th>Gio</th><th>Ven</th><th>Sab</th><th>Dom</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -114,11 +193,12 @@
     </div>
 
     <div style="text-align: center;">
-        <button class="btn-reset" onclick="resetTable()">🔄 Reset Week</button>
+        <button class="btn-reset" onclick="resetTable()">🔄 Reset Settimana</button>
     </div>
 </div>
 
 <script>
+    const children = ["Lavinia", "Ludovica"];
     const categories = [
         { name: "Morning Routine", icon: "☀️" },
         { name: "School Behavior", icon: "📚" },
@@ -126,63 +206,94 @@
         { name: "Tidying Up", icon: "🧸" },
         { name: "Respect & Rules", icon: "🤝" },
         { name: "Bedtime Routine", icon: "🌙" },
-        { name: "Independence", icon: "🚀" } // La nuova voce: Autonomia
+        { name: "Independence", icon: "🚀" }
     ];
 
-    const storageKey = 'superStarData_en_v1';
-    const nameKey = 'superStarName_en_v1';
+    const maxPoints = categories.length * 7 * 3; // 147
+    const storageKey = 'superStarDuo_v3';
 
     function load() {
         const tbody = document.getElementById('tableBody');
         const savedData = JSON.parse(localStorage.getItem(storageKey)) || {};
-        const savedName = localStorage.getItem(nameKey);
-        if(savedName) document.getElementById('childName').value = savedName;
 
         categories.forEach((cat, cIdx) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td class="task-column">${cat.icon} ${cat.name}</td>`;
-            
-            for (let d = 0; d < 7; d++) {
-                const td = document.createElement('td');
-                const container = document.createElement('div');
-                container.className = 'stars-container';
+            const headRow = document.createElement('tr');
+            headRow.innerHTML = `<td colspan="8" class="category-title">${cat.icon} ${cat.name}</td>`;
+            tbody.appendChild(headRow);
+
+            children.forEach((child, childIdx) => {
+                const row = document.createElement('tr');
+                const childClass = childIdx === 0 ? 'lavinia-text' : 'ludo-text';
+                row.innerHTML = `<td class="child-row-label ${childClass}">${child}</td>`;
                 
-                for (let s = 0; s < 3; s++) {
-                    const star = document.createElement('span');
-                    star.className = 'star';
-                    star.innerHTML = '★';
-                    const id = `${cIdx}-${d}-${s}`;
-                    if(savedData[id]) star.classList.add('active');
+                for (let dIdx = 0; dIdx < 7; dIdx++) {
+                    const td = document.createElement('td');
+                    const container = document.createElement('div');
+                    container.className = 'dots-container';
                     
-                    star.onclick = () => {
-                        star.classList.toggle('active');
-                        const data = JSON.parse(localStorage.getItem(storageKey)) || {};
-                        if(star.classList.contains('active')) data[id] = true;
-                        else delete data[id];
-                        localStorage.setItem(storageKey, JSON.stringify(data));
+                    for (let sIdx = 0; sIdx < 3; sIdx++) {
+                        const dot = document.createElement('span');
+                        dot.className = 'dot';
+                        dot.innerHTML = '●';
+                        const id = `${childIdx}-${cIdx}-${dIdx}-${sIdx}`;
+                        if(savedData[id]) dot.classList.add('active');
                         
-                        if(container.querySelectorAll('.active').length === 3 && star.classList.contains('active')) showCelebration();
-                        updateTotal();
-                    };
-                    container.appendChild(star);
+                        dot.onclick = () => {
+                            const isActivating = !dot.classList.contains('active');
+                            const allDots = container.querySelectorAll('.dot');
+                            const data = JSON.parse(localStorage.getItem(storageKey)) || {};
+
+                            allDots.forEach((d, index) => {
+                                const thisId = `${childIdx}-${cIdx}-${dIdx}-${index}`;
+                                if (isActivating && index <= sIdx) {
+                                    d.classList.add('active');
+                                    data[thisId] = true;
+                                } else if (!isActivating && index >= sIdx) {
+                                    d.classList.remove('active');
+                                    delete data[thisId];
+                                }
+                            });
+
+                            localStorage.setItem(storageKey, JSON.stringify(data));
+                            if (sIdx === 2 && isActivating) showCelebration();
+                            updateTotals();
+                        };
+                        container.appendChild(dot);
+                    }
+                    td.appendChild(container);
+                    row.appendChild(td);
                 }
-                td.appendChild(container);
-                row.appendChild(td);
-            }
-            tbody.appendChild(row);
+                tbody.appendChild(row);
+            });
         });
-        updateTotal();
+        updateTotals();
     }
 
-    function updateTotal() {
-        const points = document.querySelectorAll('.star.active').length;
-        document.getElementById('totalPoints').innerText = points;
-        const medal = document.getElementById('medalIcon');
-        if(points === 0) medal.innerText = "⚪";
-        else if(points < 30) medal.innerText = "🥉";
-        else if(points < 70) medal.innerText = "🥈";
-        else if(points < 120) medal.innerText = "🥇";
-        else medal.innerText = "🏆";
+    function updateTotals() {
+        const data = JSON.parse(localStorage.getItem(storageKey)) || {};
+        const counts = [0, 0];
+        const circumference = 2 * Math.PI * 55;
+
+        Object.keys(data).forEach(key => {
+            const childIdx = key.split('-')[0];
+            counts[childIdx]++;
+        });
+
+        counts.forEach((count, idx) => {
+            document.getElementById(`points-${idx}`).innerText = count;
+            
+            // Aggiorna Tachimetro
+            const offset = circumference - (count / maxPoints) * circumference;
+            document.getElementById(`progress-${idx}`).style.strokeDashoffset = offset;
+
+            // Aggiorna Medaglia
+            const medal = document.getElementById(`medal-${idx}`);
+            if(count === 0) medal.innerText = "⚪";
+            else if(count < 40) medal.innerText = "🥉";
+            else if(count < 85) medal.innerText = "🥈";
+            else if(count < 130) medal.innerText = "🥇";
+            else medal.innerText = "🏆";
+        });
     }
 
     function showCelebration() {
@@ -192,13 +303,11 @@
     }
 
     function resetTable() {
-        if(confirm("Are you sure you want to reset all stars for the week?")) {
+        if(confirm("Vuoi azzerare tutto per la nuova settimana?")) {
             localStorage.removeItem(storageKey);
             location.reload();
         }
     }
-
-    document.getElementById('childName').oninput = (e) => localStorage.setItem(nameKey, e.target.value);
 
     load();
 </script>
