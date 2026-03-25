@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Star Chart 🌟</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6c5ce7; /* Un viola moderno per la versione "International" */
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --star-empty: #d1ccc0;
+            --star-filled: #fdcb6e;
+            --text-color: #2d3436;
+            --main-font: 'Fredoka', sans-serif;
+        }
+
+        body {
+            font-family: var(--main-font);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .container {
+            width: 100%; max-width: 1000px;
+            background: var(--card-bg);
+            padding: 20px; border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center; margin-bottom: 20px;
+            border-bottom: 3px dashed var(--primary-color);
+            padding-bottom: 15px;
+        }
+
+        #childName {
+            font-family: var(--main-font); font-size: 2rem;
+            border: none; background: transparent;
+            text-align: center; color: var(--primary-color);
+            font-weight: 600; width: 100%;
+        }
+
+        .stats-container {
+            display: flex; justify-content: center; align-items: center;
+            gap: 15px; margin-top: 10px;
+        }
+
+        .stats { font-size: 1.8rem; font-weight: 600; }
+        .medal-icon { font-size: 2.8rem; }
+
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background-color: var(--primary-color); color: white; padding: 15px; }
+        td { padding: 12px 5px; border-bottom: 1px solid #eee; text-align: center; }
+
+        .task-column { 
+            text-align: left; font-weight: 600; 
+            width: 260px; color: #4a4a4a; font-size: 1rem;
+        }
+
+        .stars-container { display: flex; justify-content: center; gap: 4px; }
+        .star { font-size: 26px; color: var(--star-empty); cursor: pointer; transition: 0.2s; user-select: none; }
+        .star.active { color: var(--star-filled); transform: scale(1.2); }
+
+        .btn-reset { 
+            margin-top: 25px; padding: 12px 25px; 
+            border: none; border-radius: 50px; 
+            background-color: #dfe6e9; color: #636e72; 
+            cursor: pointer; font-family: var(--main-font); font-weight: 600;
+        }
+
+        #celebration {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 4rem; pointer-events: none; display: none; z-index: 1000;
+            animation: popIn 1s ease-out forwards; color: var(--primary-color);
+        }
+
+        @keyframes popIn { 0% { scale: 0; } 50% { scale: 1.2; } 100% { scale: 1; opacity: 0; } }
+
+        @media (max-width: 600px) {
+            .task-column { font-size: 0.8rem; width: 130px; }
+            th { font-size: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="celebration">WELL DONE! 🌟</div>
+
+<div class="container">
+    <header>
+        <input type="text" id="childName" value="Super Star Chart">
+        <div class="stats-container">
+            <div class="stats"><span id="totalPoints">0</span> ⭐</div>
+            <div id="medalIcon" class="medal-icon">⚪</div>
+        </div>
+    </header>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Activities</th>
+                    <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div style="text-align: center;">
+        <button class="btn-reset" onclick="resetTable()">🔄 Reset Week</button>
+    </div>
+</div>
+
+<script>
+    const categories = [
+        { name: "Morning Routine", icon: "☀️" },
+        { name: "School Behavior", icon: "📚" },
+        { name: "Table Manners", icon: "🍽️" },
+        { name: "Tidying Up", icon: "🧸" },
+        { name: "Respect & Rules", icon: "🤝" },
+        { name: "Bedtime Routine", icon: "🌙" },
+        { name: "Independence", icon: "🚀" } // La nuova voce: Autonomia
+    ];
+
+    const storageKey = 'superStarData_en_v1';
+    const nameKey = 'superStarName_en_v1';
+
+    function load() {
+        const tbody = document.getElementById('tableBody');
+        const savedData = JSON.parse(localStorage.getItem(storageKey)) || {};
+        const savedName = localStorage.getItem(nameKey);
+        if(savedName) document.getElementById('childName').value = savedName;
+
+        categories.forEach((cat, cIdx) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="task-column">${cat.icon} ${cat.name}</td>`;
+            
+            for (let d = 0; d < 7; d++) {
+                const td = document.createElement('td');
+                const container = document.createElement('div');
+                container.className = 'stars-container';
+                
+                for (let s = 0; s < 3; s++) {
+                    const star = document.createElement('span');
+                    star.className = 'star';
+                    star.innerHTML = '★';
+                    const id = `${cIdx}-${d}-${s}`;
+                    if(savedData[id]) star.classList.add('active');
+                    
+                    star.onclick = () => {
+                        star.classList.toggle('active');
+                        const data = JSON.parse(localStorage.getItem(storageKey)) || {};
+                        if(star.classList.contains('active')) data[id] = true;
+                        else delete data[id];
+                        localStorage.setItem(storageKey, JSON.stringify(data));
+                        
+                        if(container.querySelectorAll('.active').length === 3 && star.classList.contains('active')) showCelebration();
+                        updateTotal();
+                    };
+                    container.appendChild(star);
+                }
+                td.appendChild(container);
+                row.appendChild(td);
+            }
+            tbody.appendChild(row);
+        });
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const points = document.querySelectorAll('.star.active').length;
+        document.getElementById('totalPoints').innerText = points;
+        const medal = document.getElementById('medalIcon');
+        if(points === 0) medal.innerText = "⚪";
+        else if(points < 30) medal.innerText = "🥉";
+        else if(points < 70) medal.innerText = "🥈";
+        else if(points < 120) medal.innerText = "🥇";
+        else medal.innerText = "🏆";
+    }
+
+    function showCelebration() {
+        const el = document.getElementById('celebration');
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 1500);
+    }
+
+    function resetTable() {
+        if(confirm("Are you sure you want to reset all stars for the week?")) {
+            localStorage.removeItem(storageKey);
+            location.reload();
+        }
+    }
+
+    document.getElementById('childName').oninput = (e) => localStorage.setItem(nameKey, e.target.value);
+
+    load();
+</script>
+</body>
+</html>
